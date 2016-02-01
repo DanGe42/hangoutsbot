@@ -90,18 +90,21 @@ class SlackAsyncListener(AsyncRequestHandler):
                 text = emoji.emojize(str(payload["text"][0]), use_aliases=True)
             except NameError: # emoji library likely missing
                 text = str(payload["text"][0])
-                
+
             if "user_name" in payload:
                 if "slackbot" not in str(payload["user_name"][0]):
                     text = self._remap_internal_slack_ids(text)
+                    # strip out formatted links and use the second group because
+                    # we don't normally format links in normal chat
+                    text = re.sub(r'\<([^<>]+?)\|([^<>]+?)\>', r'\2', text)
                     response = "<b>" + str(payload["user_name"][0]) + ":</b> " + unescape(text)
                     response += self._bot.call_shared("reprocessor.attach_reprocessor", _slack_repeater_cleaner)
 
-                    yield from self.send_data( conversation_id, 
-                                               response, 
+                    yield from self.send_data( conversation_id,
+                                               response,
                                                context = { 'base': {
-                                                                'tags': ['slack', 'relay'], 
-                                                                'source': 'slack', 
+                                                                'tags': ['slack', 'relay'],
+                                                                'source': 'slack',
                                                                 'importance': 50 }} )
 
     def _remap_internal_slack_ids(self, text):
