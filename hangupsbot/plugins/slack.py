@@ -97,6 +97,9 @@ class SlackAsyncListener(AsyncRequestHandler):
                     # strip out formatted links and use the second group because
                     # we don't normally format links in normal chat
                     text = re.sub(r'\<([^<>]+?)\|([^<>]+?)\>', r'\2', text)
+                    # and then strip out the <> part from the link, because
+                    # it's dumb
+                    text = re.sub(r'\<(http[^<>]+?)\>', r'\1', text)
                     response = "<b>" + str(payload["user_name"][0]) + ":</b> " + unescape(text)
                     response += self._bot.call_shared("reprocessor.attach_reprocessor", _slack_repeater_cleaner)
 
